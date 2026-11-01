@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 void vFunction(FILE **listCK, FILE **checkin1)
 {
@@ -42,6 +43,7 @@ void vFunction(FILE **listCK, FILE **checkin1)
         }
         break;
     }
+
     case 2: 
     {
         break;
@@ -50,6 +52,7 @@ void vFunction(FILE **listCK, FILE **checkin1)
     {
         break;
     }
+
     default:
         printf("V: Nespravna volba vypisu.\n");
         break;
@@ -139,8 +142,36 @@ void hFunction(FILE **listCK)
     }
 }
 
-void nFuntion ()
+void nFunction (FILE *listCK, FILE *checkin1, int *sizeListCK, char **flights, char ***names, char ***surnames, int **bdays, char ***seats, int **luggagesCounts)
 {
+    if (listCK == NULL || checkin1 == NULL)
+    {
+        printf("N: Neotvoreny subor.\n");
+        return;
+    }
+
+    rewind(listCK);
+    rewind(checkin1);
+
+    char tmpFlight[7];
+    char tmpName[16];
+    char tmpSurName[26];
+    int tmpBday;
+    char tmpSeat[4];
+    int tmpLuggageCount;
+
+    // get size of 
+    while (fscanf(listCK, " # %6s %15s %25s %8d %3s %d", tmpFlight, tmpName, tmpSurName, &tmpBday, tmpSeat, &tmpLuggageCount) == 6)
+    {
+        // () lebo ++ by sa vykonalo skor cize by to poonulo pointer na inu adresu 
+        (*sizeListCK)++;
+    }
+
+    rewind(listCK);
+    rewind(checkin1);
+
+    //allocate arrays 
+    *flights = malloc(*sizeListCK * sizeof(char *));
     
 }
 
@@ -148,6 +179,15 @@ int main()
 {
     FILE *listCK = NULL;
     FILE *checkin1 = NULL;
+
+    int sizeListCK = 0;
+
+    char **flights = NULL;
+    char **names = NULL;
+    char **surNames = NULL;
+    int *bdays = NULL;
+    char **seats = NULL;
+    int *luggagesCounts = NULL;
     
     char command; 
 
@@ -160,7 +200,9 @@ int main()
             break;
         case 'h':
             hFunction(&listCK);
-            break; 
+            break;
+        case 'n':
+            nFunction(&listCK, &checkin1, &sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
         default:
             break;
         }
