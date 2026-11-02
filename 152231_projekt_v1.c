@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-void vFunction(FILE **listCK, FILE **checkin1)
+void vFunction (FILE **listCK, FILE **checkin1)
 {
     int type;
     scanf("%d", &type);
@@ -59,7 +60,7 @@ void vFunction(FILE **listCK, FILE **checkin1)
     }
 }
 
-void hFunction(FILE **listCK)
+void hFunction (FILE **listCK)
 {
     if (*listCK == NULL)
     {
@@ -142,37 +143,195 @@ void hFunction(FILE **listCK)
     }
 }
 
-void nFunction (FILE *listCK, FILE *checkin1, int *sizeListCK, char **flights, char ***names, char ***surnames, int **bdays, char ***seats, int **luggagesCounts)
+char *copyString (char *string)
+{   
+    char *copy = malloc(strlen(string)+1);
+    if (copy != NULL)
+    {
+        //do premennej copy sa narve obsah premennej string 
+        strcpy(copy, string);
+    } 
+    return copy;
+}
+
+
+void freeStringArray (char ***array, int size)
+{
+    if (*array == NULL)
+    {
+        return;
+    }
+    for (int i = 0; i < size; i++)
+    {
+        free((*array)[i]);
+    }
+    free(*array);
+    *array = NULL;
+}
+
+void freeDoubleArray (double ***array, int size)
+{
+    if (*array == NULL)
+    {
+        return;
+    }
+    for (int i = 0; i < size; i++)
+    {
+        free((*array)[i]);
+    }
+    free(*array);
+    *array = NULL;
+}
+
+void freeIntArray (int **array)
+{
+    free(*array);
+    *array = NULL;
+}
+
+void freeListCK (int *lcCount, char ***lcFlights, char ***lcNames, char ***lcSurnames, int **lcBirthdates, char ***lcSeats, int **lcLuggageCounts)
+{
+    freeStringArray(lcFlights, *lcCount);
+    freeStringArray(lcNames, *lcCount);
+    freeStringArray(lcSurnames, *lcCount);
+    freeIntArray(lcBirthdates);
+    freeStringArray(lcSeats, *lcCount);
+    freeIntArray(lcLuggageCounts);
+    *lcCount = 0;
+}
+
+void freeCheckin (int *ciCount, char ***ciFlights, char ***ciSeats, int **ciLuggageCounts, double ***ciLuggageWeights)
+{
+    freeStringArray(ciFlights, *ciCount);        
+    freeStringArray(ciSeats, *ciCount);          
+    freeIntArray(ciLuggageCounts);
+    freeDoubleArray(ciLuggageWeights, *ciCount);  
+    *ciCount = 0;                                 
+}
+
+void nFunction (FILE *listCK, FILE *checkin1, 
+    int *lcCount, char ***lcFlights, char ***lcNames, char ***lcSurnames, 
+    int **lcBirthdates, char ***lcSeats, int **lcLuggageCounts,
+
+    int *ciCount, char ***ciFlights, char ***ciSeats, 
+    int **ciLuggageCounts, double ***ciLuggageWeights
+)
 {
     if (listCK == NULL || checkin1 == NULL)
-    {
+    {   
         printf("N: Neotvoreny subor.\n");
         return;
     }
 
+    char lcTmpFlight[7];
+    char lcTmpName[16];
+    char lcTmpSurname[26];
+    int lcTmpBirthdate;
+    char lcTmpSeat[4];
+    int lcTmpLuggageCount;
+
+    freeListCK(lcCount, lcFlights, lcNames, lcSurnames, lcBirthdates, lcSeats, lcLuggageCounts);
+
     rewind(listCK);
-    rewind(checkin1);
-
-    char tmpFlight[7];
-    char tmpName[16];
-    char tmpSurName[26];
-    int tmpBday;
-    char tmpSeat[4];
-    int tmpLuggageCount;
-
-    // get size of 
-    while (fscanf(listCK, " # %6s %15s %25s %8d %3s %d", tmpFlight, tmpName, tmpSurName, &tmpBday, tmpSeat, &tmpLuggageCount) == 6)
+    
+    int lcRecords = 0;
+    while (fscanf(listCK, " # %6s %15s %25s %8d %3s %d", lcTmpFlight, lcTmpName, lcTmpSurname, &lcTmpBirthdate, lcTmpSeat, &lcTmpLuggageCount) == 6)
     {
-        // () lebo ++ by sa vykonalo skor cize by to poonulo pointer na inu adresu 
-        (*sizeListCK)++;
+        lcRecords++;
+    }
+
+    *lcFlights = calloc(lcRecords, sizeof(char *));
+    *lcNames = calloc(lcRecords, sizeof(char *));
+    *lcSurnames = calloc(lcRecords, sizeof(char *));
+    *lcBirthdates = malloc(lcRecords * sizeof(int));
+    *lcSeats = calloc(lcRecords, sizeof(char *));
+    *lcLuggageCounts = malloc(lcRecords * sizeof(int));
+    *lcCount = lcRecords;
+
+    if (*lcFlights == NULL || *lcNames == NULL || *lcSurnames == NULL || *lcBirthdates == NULL || *lcSeats == NULL || *lcLuggageCounts == NULL)
+    {
+        freeListCK(lcCount, lcFlights, lcNames, lcSurnames, lcBirthdates, lcSeats, lcLuggageCounts);
+        return;
     }
 
     rewind(listCK);
-    rewind(checkin1);
 
-    //allocate arrays 
-    *flights = malloc(*sizeListCK * sizeof(char *));
+    int i = 0;
+    while (i < lcRecords && fscanf(listCK, " # %6s %15s %25s %8d %3s %d", lcTmpFlight, lcTmpName, lcTmpSurname, &lcTmpBirthdate, lcTmpSeat, &lcTmpLuggageCount) == 6)
+    {
+        // pri typu char musim robit copy lebo potrebujem adresu a keby tam dam iba tmpFlight tak by sa vsetky flights rovnali rovnakej adrese a to tmpFlight
+        (*lcFlights)[i] = copyString(lcTmpFlight);
+        (*lcNames)[i] = copyString(lcTmpName);
+        (*lcSurnames)[i] = copyString(lcTmpSurname);
+        (*lcBirthdates)[i] = lcTmpBirthdate;
+        (*lcSeats)[i] = copyString(lcTmpSeat);
+        (*lcLuggageCounts)[i] = lcTmpLuggageCount;
+        i++;
+    }
+
+    char line[256];
+    char ciTmpFlight[7];
+    char ciTmpSeat[4];
+    int ciTmpLuggageCount;
+    int pos;
     
+    freeCheckin(ciCount, ciFlights, ciSeats, ciLuggageCounts, ciLuggageWeights);
+    
+    int ciRecords = 0;
+    rewind(checkin1);
+    while (fgets(line, sizeof(line),checkin1) != NULL)
+    {
+        if (sscanf(line, " %6[^#]#%3[^#]#%d%n", ciTmpFlight, ciTmpSeat, &ciTmpLuggageCount, &pos) == 3)
+        {
+            ciRecords++;
+        }
+    }
+    
+    if (ciRecords == 0)
+    {
+        return;
+    }
+
+    *ciFlights = calloc(ciRecords, sizeof(char *));
+    *ciSeats = calloc(ciRecords, sizeof(char *));
+    *ciLuggageCounts = malloc(ciRecords * sizeof(int));
+    *ciLuggageWeights = calloc(ciRecords, sizeof(double *));
+    *ciCount = ciRecords;
+
+    if (*ciFlights == NULL || *ciSeats == NULL || *ciLuggageCounts == NULL || *ciLuggageWeights == NULL)
+    {
+        freeCheckin(ciCount, ciFlights, ciSeats, ciLuggageCounts, ciLuggageWeights);
+        return;
+    }
+
+    rewind(checkin1);
+    i = 0;
+    while (i < ciRecords && fgets(line, sizeof(line), checkin1) != NULL)
+    {
+        if (sscanf(line, " %6[^#]#%3[^#]#%d%n", ciTmpFlight, ciTmpSeat, &ciTmpLuggageCount, &pos) != 3)
+        {
+            continue;
+        }
+
+        (*ciFlights)[i] = copyString(ciTmpFlight);
+        (*ciSeats)[i] = copyString(ciTmpSeat);
+        (*ciLuggageCounts)[i] = ciTmpLuggageCount;
+
+        if (ciTmpLuggageCount > 0)
+        {
+            (*ciLuggageWeights)[i] = malloc(ciTmpLuggageCount * sizeof(double));
+            for (int j = 0; j < ciTmpLuggageCount; j++)
+            {
+                int n;
+                if (sscanf(line + pos, "#%lf%n", &(*ciLuggageWeights)[i][j], &n) != 1)
+                {
+                    break;
+                }
+                pos += n;
+            }
+        }
+        i++;
+    }
 }
 
 int main()
@@ -181,13 +340,18 @@ int main()
     FILE *checkin1 = NULL;
 
     int sizeListCK = 0;
-
     char **flights = NULL;
     char **names = NULL;
     char **surNames = NULL;
     int *bdays = NULL;
     char **seats = NULL;
     int *luggagesCounts = NULL;
+
+    int sizeCheckin = 0;
+    char **ckFlights = NULL;
+    char **ckSeats = NULL;
+    int *ckLuggageCounts = NULL;
+    double **ckWeights = NULL;
     
     char command; 
 
@@ -202,7 +366,12 @@ int main()
             hFunction(&listCK);
             break;
         case 'n':
-            nFunction(&listCK, &checkin1, &sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
+            nFunction(&listCK, &checkin1, &sizeListCK, &flights, &names, &surNames, 
+                &bdays, &seats, &luggagesCounts, &sizeCheckin, &ckFlights, &ckSeats, &ckLuggageCounts, &ckWeights);
+            break;
+        case 'q':
+            
+            break;
         default:
             break;
         }
