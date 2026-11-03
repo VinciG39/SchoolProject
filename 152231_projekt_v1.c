@@ -352,7 +352,7 @@ void qFunction (int *size, char ***flights, char ***names, char ***surnames, int
     char tmpSeat[4];
     int tmpLuggageCount;
 
-    if (scanf(" # %6s %15s %25s %8d %3s %d", tmpFlight, tmpName, tmpSurname, &tmpBday, tmpSeat, &tmpLuggageCount) != 6)
+    if (scanf("%6s %15s %25s %8d %3s %d", tmpFlight, tmpName, tmpSurname, &tmpBday, tmpSeat, &tmpLuggageCount) != 6)
     {
         return;
     }
@@ -408,6 +408,73 @@ void qFunction (int *size, char ***flights, char ***names, char ***surnames, int
     (*seats)[index] = copyString(tmpSeat);
     (*luggageCounts)[index] = tmpLuggageCount;
 }
+
+void wFunction (int *size, char ***flights, char ***names, char ***surnames, int **bdays, char ***seats, int **luggageCounts)
+{
+    char flightID[7];
+    scanf("%6s", flightID);
+
+    int count = 0;
+    int keep = 0;
+    for (int i = 0; i < *size; i++)
+    {
+        if (strcmp(flightID, (*flights)[i]) == 0)
+        {
+            free((*flights)[i]);
+            free((*names)[i]);
+            free((*surnames)[i]);
+            free((*seats)[i]);
+            *size--;
+            count++;
+        }
+        else 
+        {
+            (*flights)[keep] = (*flights)[i];
+            (*names)[keep] = (*names)[i];
+            (*surnames)[keep] = (*surnames)[i];
+            (*bdays)[keep] = (*bdays)[i];
+            (*seats)[keep] = (*seats)[i];
+            (*luggageCounts)[keep] = (*luggageCounts)[i];
+            keep++;
+        }
+    }
+
+    if (count > 0 && *size > 0)
+    {
+        char **newFlights = realloc(*flights, *size * sizeof(char *));
+        if (newFlights == NULL) return;
+        *flights = newFlights;
+
+        char **newNames = realloc(*names, *size * sizeof(char *));
+        if (newNames == NULL) return;
+        *names = newNames;
+
+        char **newSurnames = realloc(*surnames, *size * sizeof(char *));
+        if (newSurnames == NULL) return;
+        *surnames = newSurnames;
+
+        int *newBdays = realloc(*bdays, *size * sizeof(int));
+        if (newBdays == NULL) return;
+        *bdays = newBdays;
+
+        char **newSeats = realloc(*seats, *size * sizeof(char *));
+        if (newSeats == NULL) return;
+        *seats = newSeats;
+
+        int *newLuggageCounts = realloc(*luggageCounts, *size * sizeof(int));
+        if (newLuggageCounts == NULL) return;
+        *luggageCounts = newLuggageCounts;
+    }
+    else if (*size == 0)
+    {
+        freeListCK(size, flights, names, surnames, bdays, seats, luggageCounts);
+    }
+
+    *size = keep;
+
+    printf("W: Vymazalo sa : %d zaznamov !\n", count);
+}
+
 
 int main()
 {
