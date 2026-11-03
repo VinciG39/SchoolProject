@@ -334,6 +334,81 @@ void nFunction (FILE *listCK, FILE *checkin1,
     }
 }
 
+void qFunction (int *size, char ***flights, char ***names, char ***surnames, int **bdays, char ***seats, int **luggageCounts)
+{
+    int Y;
+    scanf("%d", &Y);
+
+    if (*flights == NULL || *names == NULL || *surnames == NULL || *bdays == NULL || *seats == NULL || *luggageCounts == NULL)
+    {
+        printf("Q: Polia nie su vytvorene.\n");
+        return;
+    }
+
+    char tmpFlight[7];
+    char tmpName[16];
+    char tmpSurname[26];
+    int tmpBday;
+    char tmpSeat[4];
+    int tmpLuggageCount;
+
+    if (scanf(" # %6s %15s %25s %8d %3s %d", tmpFlight, tmpName, tmpSurname, &tmpBday, tmpSeat, &tmpLuggageCount) != 6)
+    {
+        return;
+    }
+    
+    int index = Y - 1;
+    if (Y > *size)
+    {
+        index = *size;
+    }
+    else if (index < 0)
+    {
+        index = 0;
+    }
+
+    char **newFlight = realloc(*flights, (*size + 1) * sizeof(char *));
+    if (newFlight == NULL) return;
+    flights = newFlight;
+
+    char **newName = realloc(*names, (*size + 1) * sizeof(char *));
+    if (newName = NULL) return;
+    names = newName;
+
+    char **newSurname = realloc(*surnames, (*size + 1) * sizeof(char *));
+    if (newSurname == NULL) return;
+    surnames = newSurname;
+    
+    int newBday = realloc(*bdays, (*size + 1) * sizeof(int));
+    if (newBday == NULL) return;
+    bdays = newBday;
+
+    char newSeat = realloc(*seats, (*size + 1) * sizeof(char *));
+    if (newSeat == NULL) return;
+    seats =  newSeat;
+
+    int newLuggageCount = realloc(*luggageCounts, (*size + 1) * sizeof(int));
+    if (newLuggageCount == NULL) return;
+    luggageCounts = newLuggageCount;
+
+    for (int i = *size; i > index; i++)
+    {
+        (*flights)[i] = (*flights)[i - 1];
+        (*names)[i] = (*names)[i - 1];
+        (*surnames)[i] = (*surnames)[i - 1];
+        (*bdays)[i] = (*bdays)[i - 1];
+        (*seats)[i] = (*seats)[i - 1];
+        (*luggageCounts)[i] = (*luggageCounts)[i - 1];
+    }
+
+    (*flights)[index] = copyString(tmpFlight);
+    (*names)[index] = copyString(tmpName);
+    (*surnames)[index] = copyString(tmpSurname);
+    (*bdays)[index] = tmpBday;
+    (*seats)[index] = copyString(tmpSeat);
+    (*luggageCounts)[index] = tmpLuggageCount;
+}
+
 int main()
 {
     FILE *listCK = NULL;
@@ -370,7 +445,7 @@ int main()
                 &bdays, &seats, &luggagesCounts, &sizeCheckin, &ckFlights, &ckSeats, &ckLuggageCounts, &ckWeights);
             break;
         case 'q':
-            
+            qFunction(&sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
             break;
         default:
             break;
