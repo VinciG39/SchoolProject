@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void vFunction (FILE **listCK, FILE **checkin1)
+void vFunction (FILE **listCK, FILE **checkin1,
+    int *lcCount, char ***lcFlights, char ***lcNames, char ***lcSurnames, 
+    int **lcBirthdates, char ***lcSeats, int **lcLuggageCounts,
+
+    int *ciCount, char ***ciFlights, char ***ciSeats, 
+    int **ciLuggageCounts, double ***ciLuggageWeights
+)
 {
     int type;
     scanf("%d", &type);
@@ -47,6 +53,57 @@ void vFunction (FILE **listCK, FILE **checkin1)
 
     case 2: 
     {
+        if (*lcFlights == NULL)
+        {
+           printf("V2: Nenaplnene polia.\n");
+            return;
+        }
+        
+        for (int i = 0; i < *lcCount; i++)
+        {
+            int found = -1;
+            for (int j = 0; j < *ciCount; j++)
+            {
+                if (strcmp((*lcFlights)[i], (*ciFlights)[j]) == 0 && strcmp((*lcSeats)[i], (*ciSeats)[j]) == 0)
+                {
+                    found = j;
+                    break;
+                }
+            }
+
+            int birthYear = (*lcBirthdates)[i] % 10000;  
+            int age = 2026 - birthYear;
+
+            printf("Oznacenie letu: %s\n",(*lcFlights)[i]);
+            printf("Meno a Priezvisko [vek]: %s %s [%d]\n", (*lcNames)[i], (*lcSurnames)[i], age);
+            printf("Oznacenie sedadla: %c %s\n", (*lcSeats)[i][0], (*lcSeats)[i] + 1);  
+
+            if (found != -1)
+            {
+                printf("Status: true\n");
+                printf("Pocet batoziny: %d / %d", (*ciLuggageCounts)[found], (*lcLuggageCounts)[i]);
+                for (int k = 0; k < (*ciLuggageCounts)[found]; k++)
+                {
+                    if (k > 0)
+                    {
+                        printf(",");
+                    }
+                    else
+                    {
+                        printf(" ");  
+                    }
+                    printf("[%.2lf]", (*ciLuggageWeights)[found][k]);
+                }
+                printf("\n");
+            }
+            else
+            {
+                printf("Status: false\n");
+                printf("Pocet batoziny: 0 / %d\n", (*lcLuggageCounts)[i]);
+            }
+
+            printf("\n");
+        }
         break;
     }
     case 3:
@@ -369,29 +426,29 @@ void qFunction (int *size, char ***flights, char ***names, char ***surnames, int
 
     char **newFlight = realloc(*flights, (*size + 1) * sizeof(char *));
     if (newFlight == NULL) return;
-    flights = newFlight;
+    *flights = newFlight;
 
     char **newName = realloc(*names, (*size + 1) * sizeof(char *));
-    if (newName = NULL) return;
-    names = newName;
+    if (newName == NULL) return;   
+    *names = newName;
 
     char **newSurname = realloc(*surnames, (*size + 1) * sizeof(char *));
     if (newSurname == NULL) return;
-    surnames = newSurname;
+    *surnames = newSurname;
     
-    int newBday = realloc(*bdays, (*size + 1) * sizeof(int));
+    int *newBday = realloc(*bdays, (*size + 1) * sizeof(int));
     if (newBday == NULL) return;
-    bdays = newBday;
+    *bdays = newBday;
 
-    char newSeat = realloc(*seats, (*size + 1) * sizeof(char *));
+    char **newSeat = realloc(*seats, (*size + 1) * sizeof(char *));
     if (newSeat == NULL) return;
-    seats =  newSeat;
+    *seats = newSeat;
 
-    int newLuggageCount = realloc(*luggageCounts, (*size + 1) * sizeof(int));
+    int *newLuggageCount = realloc(*luggageCounts, (*size + 1) * sizeof(int));
     if (newLuggageCount == NULL) return;
-    luggageCounts = newLuggageCount;
+    *luggageCounts = newLuggageCount;
 
-    for (int i = *size; i > index; i++)
+    for (int i = *size; i > index; i--)  
     {
         (*flights)[i] = (*flights)[i - 1];
         (*names)[i] = (*names)[i - 1];
@@ -407,10 +464,18 @@ void qFunction (int *size, char ***flights, char ***names, char ***surnames, int
     (*bdays)[index] = tmpBday;
     (*seats)[index] = copyString(tmpSeat);
     (*luggageCounts)[index] = tmpLuggageCount;
+
+    (*size)++;  
 }
 
 void wFunction (int *size, char ***flights, char ***names, char ***surnames, int **bdays, char ***seats, int **luggageCounts)
 {
+    if (*flights == NULL || *names == NULL || *surnames == NULL || *bdays == NULL || *seats == NULL || *luggageCounts == NULL)
+    {
+        printf("W: Polia nie su vytvorene.\n");
+        return;
+    }
+
     char flightID[7];
     scanf("%6s", flightID);
 
@@ -424,7 +489,6 @@ void wFunction (int *size, char ***flights, char ***names, char ***surnames, int
             free((*names)[i]);
             free((*surnames)[i]);
             free((*seats)[i]);
-            *size--;
             count++;
         }
         else 
@@ -438,6 +502,8 @@ void wFunction (int *size, char ***flights, char ***names, char ***surnames, int
             keep++;
         }
     }
+
+    *size = keep;  
 
     if (count > 0 && *size > 0)
     {
@@ -470,8 +536,6 @@ void wFunction (int *size, char ***flights, char ***names, char ***surnames, int
         freeListCK(size, flights, names, surnames, bdays, seats, luggageCounts);
     }
 
-    *size = keep;
-
     printf("W: Vymazalo sa : %d zaznamov !\n", count);
 }
 
@@ -502,25 +566,32 @@ int main()
         switch (command)
         {
         case 'v':
-            vFunction(&listCK, &checkin1);
+            vFunction(&listCK, &checkin1, &sizeListCK, &flights, &names, &surNames, 
+                &bdays, &seats, &luggagesCounts, &sizeCheckin, &ckFlights, &ckSeats, &ckLuggageCounts, &ckWeights);
             break;
         case 'h':
             hFunction(&listCK);
             break;
         case 'n':
-            nFunction(&listCK, &checkin1, &sizeListCK, &flights, &names, &surNames, 
+            nFunction(listCK, checkin1, &sizeListCK, &flights, &names, &surNames, 
                 &bdays, &seats, &luggagesCounts, &sizeCheckin, &ckFlights, &ckSeats, &ckLuggageCounts, &ckWeights);
             break;
         case 'q':
             qFunction(&sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
+            break;
+        case 'w':   
+            wFunction(&sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
             break;
         default:
             break;
         }
     }
 
-    fclose(listCK);
-    fclose(checkin1);
+    freeListCK(&sizeListCK, &flights, &names, &surNames, &bdays, &seats, &luggagesCounts);
+    freeCheckin(&sizeCheckin, &ckFlights, &ckSeats, &ckLuggageCounts, &ckWeights);
+
+    if (listCK != NULL) fclose(listCK);
+    if (checkin1 != NULL) fclose(checkin1);
     
     return 0;
 }
